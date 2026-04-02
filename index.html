@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIRTUALDJ ($VIRTUALDJ) - The AI DJ of the Trenches</title>
+    <meta name="description" content="The first autonomous AI radio broadcaster on Solana blockchain. 24/7 music livestream on pump.fun.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cyan: #00f5ff;
+            --magenta: #ff00aa;
+            --purple: #aa00ff;
+            --white: #ffffff;
+            --bg-dark: #050510;
+            --bg-card: rgba(0, 245, 255, 0.03);
+            --border-subtle: rgba(0, 245, 255, 0.12);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--white);
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        @media (pointer: coarse) {
+            body { cursor: auto; }
+        }
+
+        ::selection {
+            background: var(--cyan);
+            color: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 4px;
+        }
+
+        .font-display { font-family: 'Orbitron', sans-serif; }
+        .font-body { font-family: 'Share Tech Mono', monospace; }
+        .font-label { font-family: 'Rajdhani', sans-serif; }
+
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.12) 2px,
+                rgba(0, 0, 0, 0.12) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: var(--cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .cursor-line {
+            position: absolute;
+            background: var(--cyan);
+            opacity: 0.7;
+        }
+
+        .cursor-line.horizontal {
+            width: 16px;
+            height: 1px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .cursor-line.horizontal.left { left: 0; }
+        .cursor-line.horizontal.right { right: 0; }
+
+        .cursor-line.vertical {
+            width: 1px;
+            height: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cursor-line.vertical.top { top: 0; }
+        .cursor-line.vertical.bottom { bottom: 0; }
+
+        .cursor-ghost {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .section-dot-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-dot {
+            width: 8px;
+            height: 8px;
+            border: 1px solid var(--cyan);
+            border-radius: 50%;
+            background: transparent;
+            transition: all 0.3s;
+            cursor: none;
+        }
+
+        .section-dot.active {
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .section-dot:hover {
+            transform: scale(1.3);
+            background: var(--magenta);
+            border-color: var(--magenta);
+        }
+
+        @media (max-width: 768px) {
+            .section-dot-nav { display: none; }
+        }
+
+        main {
+            position: relative;
+            z-index: 2;
+        }
+
+        section {
+            padding: 6rem 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .container-wide {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--cyan);
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease 0.1s;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* HERO SECTION */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo-wrapper {
+            position: relative;
+            padding: 2rem 3rem;
+            opacity: 0;
+            animation: fadeSlideDown 0.8s ease forwards;
+        }
+
+        @keyframes fadeSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+        }
+
+        .logo-corner.tl { top: 0; left: 0; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+        .logo-corner.tr { top: 0; right: 0; border-top: 2px solid var(--magenta); border-right: 2px solid var(--magenta); }
+        .logo-corner.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--magenta); border-left: 2px solid var(--magenta); }
+        .logo-corner.br { bottom: 0; right: 0; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 50, 50, 0.5);
+            border-radius: 4px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: #ff4444;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.2s forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 5vw, 3.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.4s forwards;
+        }
+
+        .hero-title .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: wordReveal 0.6s ease forwards;
+        }
+
+        @keyframes wordReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-subtitle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: rgba(0, 245, 255, 0.7);
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.6s forwards;
+        }
+
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid var(--cyan);
+            animation: typing 2s steps(60) 1s forwards, blink 0.7s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.8s forwards;
+        }
+
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 1rem 2.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border: 2px solid var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--magenta);
+            border: 2px solid var(--magenta);
+        }
+
+        .btn-secondary:hover {
+            background: var(--magenta);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px rgba(255, 0, 170, 0.4);
+        }
+
+        .contract-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 1s forwards;
+        }
+
+        .contract-box .copy-btn {
+            background: none;
+            border: none;
+            color: var(--cyan);
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .contract-box .copy-btn:hover {
+            color: var(--magenta);
+            transform: scale(1.1);
+        }
+
+        .contract-box .copy-btn.copied {
+            color: #00ff88;
+        }
+
+        /* ABOUT SECTION */
+        #about {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 245, 255, 0.02) 50%, transparent 100%);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .vinyl-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .vinyl-disc {
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .feature-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-left-width: 3px;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 245, 255, 0.15);
+        }
+
+        .feature-card.card-1 { border-left-color: var(--cyan); }
+        .feature-card.card-2 { border-left-color: var(--magenta); }
+        .feature-card.card-3 { border-left-color: var(--purple); }
+
+        .feature-card .card-icon {
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card .card-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card .card-body {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        /* TOKENOMICS SECTION */
+        #tokenomics {
+            background: linear-gradient(180deg, rgba(0, 245, 255, 0.03) 0%, transparent 100%);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, var(--border-subtle), transparent);
+        }
+
+        @media (max-width: 768px) {
+            .stat-item:nth-child(2)::after,
+            .stat-item:last-child::after { display: none; }
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number.cyan { color: var(--cyan); }
+        .stat-number.magenta { color: var(--magenta); }
+        .stat-number.purple { color: var(--purple); }
+        .stat-number.white { color: var(--white); }
+
+        .stat-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .bonding-curve-container {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bonding-curve-svg {
+            width: 100%;
+            height: 200px;
+        }
+
+        .axis-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            fill: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.2em;
+        }
+
+        .tokenomics-note {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+
+        /* ROADMAP SECTION */
+        #roadmap .container {
+            max-width: 800px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--cyan), var(--purple));
+            opacity: 0.3;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding-left: 1rem;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-node {
+            position: absolute;
+            left: -3rem;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+
+        .timeline-node.completed {
+            background: var(--cyan);
+            box-shadow: 0 0 15px var(--cyan);
+        }
+
+        .timeline-node.in-progress {
+            border: 2px solid var(--cyan);
+            background: transparent;
+            animation: nodePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes nodePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 245, 255, 0); }
+        }
+
+        .timeline-node.future {
+            border: 2px solid var(--cyan);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .timeline-phase {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--cyan);
+            letter-spacing: 0.2em;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        /* HOW TO BUY SECTION */
+        #howtobuy {
+            background: #070712;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--cyan);
+            box-shadow: 0 10px 40px rgba(0, 245, 255, 0.1);
+        }
+
+        .step-number {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--cyan);
+            opacity: 0.15;
+        }
+
+        .step-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 0.75rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        /* COMMUNITY SECTION */
+        #community {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border: 2px solid;
+            border-radius: 0.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn.cyan {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .social-btn.cyan:hover {
+            background: var(--cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
+        }
+
+        .social-btn.magenta {
+            color: var(--magenta);
+            border-color: var(--magenta);
+        }
+
+        .social-btn.magenta:hover {
+            background: var(--magenta);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px rgba(255, 0, 170, 0.4);
+        }
+
+        .social-btn.purple {
+            color: var(--purple);
+            border-color: var(--purple);
+        }
+
+        .social-btn.purple:hover {
+            background: var(--purple);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px rgba(170, 0, 255, 0.4);
+        }
+
+        .separator {
+            width: 100%;
+            max-width: 400px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            margin: 0 auto 2rem;
+        }
+
+        .footer-text {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.3);
+            line-height: 1.8;
+        }
+
+        .footer-text .warning {
+            color: rgba(255, 200, 0, 0.6);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            section {
+                padding: 4rem 1.5rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .typewriter {
+                animation: none;
+                width: 100%;
+                border-right: none;
+            }
+
+            .logo-wrapper {
+                padding: 1.5rem 1rem;
+            }
+
+            .vinyl-container {
+                padding: 1rem;
+            }
+
+            .social-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .social-btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+    <div class="scanlines"></div>
+
+    <div class="cursor" id="cursor">
+        <div class="cursor-dot"></div>
+        <div class="cursor-line horizontal left"></div>
+        <div class="cursor-line horizontal right"></div>
+        <div class="cursor-line vertical top"></div>
+        <div class="cursor-line vertical bottom"></div>
+    </div>
+    <div class="cursor-ghost" id="cursor-ghost"></div>
+
+    <nav class="section-dot-nav" id="section-nav">
+        <a href="#hero" class="section-dot active" data-section="hero"></a>
+        <a href="#about" class="section-dot" data-section="about"></a>
+        <a href="#tokenomics" class="section-dot" data-section="tokenomics"></a>
+        <a href="#roadmap" class="section-dot" data-section="roadmap"></a>
+        <a href="#howtobuy" class="section-dot" data-section="howtobuy"></a>
+        <a href="#community" class="section-dot" data-section="community"></a>
+    </nav>
+
+    <main>
+        <!-- HERO SECTION -->
+        <section id="hero">
+            <div class="hero-content">
+                <div class="logo-wrapper">
+                    <div class="logo-corner tl"></div>
+                    <div class="logo-corner tr"></div>
+                    <div class="logo-corner bl"></div>
+                    <div class="logo-corner br"></div>
+                    <svg width="500" height="180" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="glow-magenta" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#00f5ff"/>
+                                <stop offset="100%" style="stop-color:#ff00aa"/>
+                            </linearGradient>
+                        </defs>
+                        <text x="10" y="80" font-family="Orbitron, sans-serif" font-size="48" font-weight="900" fill="#00f5ff" filter="url(#glow-cyan)">VIRTUAL</text>
+                        <text x="340" y="90" font-family="Orbitron, sans-serif" font-size="64" font-weight="900" fill="#ff00aa" filter="url(#glow-magenta)">DJ</text>
+                        <line x1="10" y1="105" x2="470" y2="105" stroke="url(#line-gradient)" stroke-width="2">
+                            <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="10" y1="107" x2="470" y2="107" stroke="url(#line-gradient)" stroke-width="1" opacity="0.5">
+                            <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <text x="85" y="155" font-family="Rajdhani, sans-serif" font-size="14" font-weight="600" fill="rgba(0,245,255,0.6)" letter-spacing="0.3em" text-anchor="middle" style="text-transform: uppercase; font-variant: small-caps;">THE AI DJ OF THE TRENCHES · $VIRTUALDJ</text>
+                    </svg>
+                </div>
+
+                <div class="live-badge">
+                    <span class="live-dot"></span>
+                    <span>● LIVE ON PUMP.FUN</span>
+                </div>
+
+                <h1 class="hero-title">
+                    <span class="word" style="animation-delay: 0.6s;">THE</span>
+                    <span class="word" style="animation-delay: 0.8s;">FIRST</span>
+                    <span class="word" style="animation-delay: 1.0s;">AI</span>
+                    <span class="word" style="animation-delay: 1.2s;">DJ</span>
+                    <span class="word" style="animation-delay: 1.4s;">ON</span>
+                    <span class="word" style="animation-delay: 1.6s;">SOLANA</span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    <span class="typewriter">> streaming music 24/7 · powered by artificial intelligence · built in the trenches</span>
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">BUY $VIRTUALDJ</a>
+                    <a href="#" class="btn btn-secondary">WATCH LIVE</a>
+                </div>
+
+                <div class="contract-box">
+                    <span>CA:</span>
+                    <span id="contract-address">[LOADING FROM PUMP.FUN...]</span>
+                    <button class="copy-btn" id="copy-btn" aria-label="Copy contract address">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section id="about">
+            <div class="container">
+                <div class="section-label reveal">// ABOUT</div>
+                <h2 class="section-title reveal">Meet Your New Favorite DJ</h2>
+                
+                <div class="about-grid">
+                    <div class="vinyl-container reveal">
+                        <svg class="vinyl-disc" width="280" height="280" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <radialGradient id="vinyl-gradient" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" style="stop-color:#1a1a2e"/>
+                                    <stop offset="100%" style="stop-color:#0a0a15"/>
+                                </radialGradient>
+                                <filter id="vinyl-glow">
+                                    <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <circle cx="140" cy="140" r="130" fill="url(#vinyl-gradient)" stroke="#00f5ff" stroke-width="2" filter="url(#vinyl-glow)"/>
+                            <circle cx="140" cy="140" r="115" fill="none" stroke="rgba(0,245,255,0.2)" stroke-width="1"/>
+                            <circle cx="140" cy="140" r="100" fill="none" stroke="rgba(0,245,255,0.15)" stroke-width="1"/>
+                            <circle cx="140" cy="140" r="85" fill="none" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+                            <circle cx="140" cy="140" r="70" fill="none" stroke="rgba(0,245,255,0.15)" stroke-width="1"/>
+                            <circle cx="140" cy="140" r="55" fill="none" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+                            <circle cx="140" cy="140" r="40" fill="rgba(255,0,170,0.8)"/>
+                            <text x="140" y="147" font-family="Orbitron, sans-serif" font-size="16" font-weight="900" fill="#050510" text-anchor="middle">VDJ</text>
+                            <circle cx="140" cy="140" r="12" fill="#050510"/>
+                        </svg>
+                    </div>
+
+                    <div class="feature-cards">
+                        <div class="feature-card card-1 reveal">
+                            <div class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                            </div>
+                            <h3 class="card-title">AI-POWERED BROADCASTER</h3>
+                            <p class="card-body">An autonomous AI agent that hosts, speaks, and curates music with no human input. Running 24/7 on a VPS in the cloud.</p>
+                        </div>
+
+                        <div class="feature-card card-2 reveal">
+                            <div class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff00aa" stroke-width="2">
+                                    <path d="M9 18V5l12-2v13"/>
+                                    <circle cx="6" cy="18" r="3"/>
+                                    <circle cx="18" cy="16" r="3"/>
+                                </svg>
+                            </div>
+                            <h3 class="card-title">LIVE ON PUMP.FUN</h3>
+                            <p class="card-body">Full livestream integration on pump.fun. Watch the agent spin tracks while the token trades in real time.</p>
+                        </div>
+
+                        <div class="feature-card card-3 reveal">
+                            <div class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aa00ff" stroke-width="2">
+                                    <circle cx="12" cy="12" r="2"/>
+                                    <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+                                </svg>
+                            </div>
+                            <h3 class="card-title">SOLANA NATIVE</h3>
+                            <p class="card-body">Launched on the Solana blockchain via pump.fun. Fast, cheap, and built for the trenches. $VIRTUALDJ is the token.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOKENOMICS SECTION -->
+        <section id="tokenomics">
+            <div class="container">
+                <div class="section-label reveal">// TOKENOMICS</div>
+                <h2 class="section-title reveal">Fair Launch. No Bullshit.</h2>
+
+                <div class="stats-bar reveal">
+                    <div class="stat-item">
+                        <div class="stat-number cyan">1,000,000,000</div>
+                        <div class="stat-label">Total Supply</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number magenta">0%</div>
+                        <div class="stat-label">Dev Allocation</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number purple">0%</div>
+                        <div class="stat-label">Pre-Sale</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number white">100%</div>
+                        <div class="stat-label">Fair Launch</div>
+                    </div>
+                </div>
+
+                <div class="bonding-curve-container reveal">
+                    <svg class="bonding-curve-svg" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <linearGradient id="curve-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#00f5ff"/>
+                                <stop offset="100%" style="stop-color:#ff00aa"/>
+                            </linearGradient>
+                            <filter id="dot-glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <line x1="50" y1="130" x2="380" y2="130" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                        <line x1="50" y1="20" x2="50" y2="130" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                        <text x="215" y="148" class="axis-label" text-anchor="middle">HOLDERS</text>
+                        <text x="20" y="75" class="axis-label" transform="rotate(-90, 20, 75)" text-anchor="middle">PRICE</text>
+                        <path d="M 50 130 Q 150 125, 200 100 T 350 25" fill="none" stroke="url(#curve-gradient)" stroke-width="2" stroke-linecap="round"/>
+                        <circle r="6" fill="#ff00aa" filter="url(#dot-glow)">
+                            <animateMotion dur="4s" repeatCount="indefinite" path="M 50 130 Q 150 125, 200 100 T 350 25"/>
+                        </circle>
+                    </svg>
+                </div>
+
+                <p class="tokenomics-note reveal">* Launched via pump.fun fair launch. Liquidity automatically added to PumpSwap at graduation.</p>
+            </div>
+        </section>
+
+        <!-- ROADMAP SECTION -->
+        <section id="roadmap">
+            <div class="container">
+                <div class="section-label reveal">// ROADMAP</div>
+                <h2 class="section-title reveal">The Broadcast Schedule</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item reveal">
+                        <div class="timeline-node in-progress"></div>
+                        <div class="timeline-phase">PHASE 01</div>
+                        <h3 class="timeline-title">LAUNCH</h3>
+                        <p class="timeline-desc">Token launch on pump.fun. AI DJ goes live. First broadcast begins. Trenches activated.</p>
+                    </div>
+
+                    <div class="timeline-item reveal">
+                        <div class="timeline-node future"></div>
+                        <div class="timeline-phase">PHASE 02</div>
+                        <h3 class="timeline-title">BROADCAST</h3>
+                        <p class="timeline-desc">24/7 AI radio stream. Playlist curation system. Live interaction with holders.</p>
+                    </div>
+
+                    <div class="timeline-item reveal">
+                        <div class="timeline-node future"></div>
+                        <div class="timeline-phase">PHASE 03</div>
+                        <h3 class="timeline-title">GRADUATION</h3>
+                        <p class="timeline-desc">Hit $69k market cap. Graduate to PumpSwap. Listings begin. Community grows.</p>
+                    </div>
+
+                    <div class="timeline-item reveal">
+                        <div class="timeline-node future"></div>
+                        <div class="timeline-phase">PHASE 04</div>
+                        <h3 class="timeline-title">MAINNET DJ</h3>
+                        <p class="timeline-desc">Expand AI capabilities. Guest AI DJs. Community-voted playlists. DAO formation.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HOW TO BUY SECTION -->
+        <section id="howtobuy">
+            <div class="container">
+                <div class="section-label reveal">// HOW TO BUY</div>
+                <h2 class="section-title reveal">Get Into The Trenches</h2>
+
+                <div class="steps-grid">
+                    <div class="step-card reveal">
+                        <span class="step-number">01</span>
+                        <h3 class="step-title">GET A WALLET</h3>
+                        <p class="step-desc">Download Phantom or Solflare. Create your Solana wallet and save your seed phrase.</p>
+                    </div>
+
+                    <div class="step-card reveal">
+                        <span class="step-number">02</span>
+                        <h3 class="step-title">BUY SOLANA</h3>
+                        <p class="step-desc">Purchase SOL from any exchange (Coinbase, Binance, Kraken). Send it to your wallet.</p>
+                    </div>
+
+                    <div class="step-card reveal">
+                        <span class="step-number">03</span>
+                        <h3 class="step-title">FIND $VIRTUALDJ</h3>
+                        <p class="step-desc">Go to pump.fun and search for VIRTUALDJ or paste the contract address.</p>
+                    </div>
+
+                    <div class="step-card reveal">
+                        <span class="step-number">04</span>
+                        <h3 class="step-title">APE IN</h3>
+                        <p class="step-desc">Swap your SOL for $VIRTUALDJ. Welcome to the broadcast. The DJ is always on.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMMUNITY SECTION -->
+        <section id="community">
+            <div class="section-label reveal">// COMMUNITY</div>
+            <h2 class="section-title reveal">Join The Station</h2>
+
+            <div class="social-links reveal">
+                <a href="#" class="social-btn cyan">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    FOLLOW ON X
+                </a>
+                <a href="#" class="social-btn magenta">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    JOIN TELEGRAM
+                </a>
+                <a href="#" class="social-btn purple">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    TRADE NOW
+                </a>
+            </div>
+
+            <div class="separator"></div>
+
+            <p class="footer-text">
+                © 2026 VIRTUALDJ · $VIRTUALDJ · Solana Blockchain · pump.fun<br>
+                <span class="warning">⚠ This is a memecoin. Not financial advice. Do your own research. Never invest more than you can lose.</span>
+            </p>
+        </section>
+    </main>
+
+    <script>
+        // Canvas Animation
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let barHeights = [];
+        let time = 0;
+        let isMobile = window.innerWidth < 768;
+        const targetFPS = isMobile ? 30 : 60;
+        let lastFrameTime = 0;
+        const frameInterval = 1000 / targetFPS;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+            initBars();
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = isMobile ? 30 : 60;
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: 1 + Math.random(),
+                    speed: 0.2 + Math.random() * 0.3,
+                    opacity: 0.15 + Math.random() * 0.15
+                });
+            }
+        }
+
+        function initBars() {
+            barHeights = [];
+            const count = isMobile ? 40 : 80;
+            for (let i = 0; i < count; i++) {
+                barHeights.push(0);
+            }
+        }
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(0, 245, 255, 0.04)';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawWaveform() {
+            ctx.beginPath();
+            ctx.strokeStyle = '#00f5ff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00f5ff';
+
+            const amplitude = 40 + Math.sin(time * 0.02) * 15;
+            const frequency = 0.02;
+
+            for (let x = 0; x <= width; x += 2) {
+                const y = height / 2 +
+                    Math.sin(x * frequency + time * 0.05) * amplitude * 0.5 +
+                    Math.sin(x * frequency * 2 + time * 0.03) * amplitude * 0.3 +
+                    Math.sin(x * frequency * 0.5 + time * 0.07) * amplitude * 0.2;
+
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawSpectrumBars() {
+            const barCount = isMobile ? 40 : 80;
+            const barWidth = width / barCount;
+            const maxHeight = height * 0.25;
+
+            for (let i = 0; i < barCount; i++) {
+                const targetHeight = Math.random() * maxHeight * (0.3 + Math.sin(time * 0.1 + i * 0.2) * 0.3 + 0.4);
+                barHeights[i] = lerp(barHeights[i], targetHeight, 0.1);
+
+                const x = i * barWidth;
+                const y = height - barHeights[i];
+
+                const gradient = ctx.createLinearGradient(x, y, x, height);
+                gradient.addColorStop(0, '#ff00aa');
+                gradient.addColorStop(0.5, '#aa00ff');
+                gradient.addColorStop(1, '#00f5ff');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x + 1, y, barWidth - 2, barHeights[i]);
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 245, 255, ${p.opacity})`;
+                ctx.fill();
+
+                p.y -= p.speed;
+                if (p.y < -10) {
+                    p.y = height + 10;
+                    p.x = Math.random() * width;
+                }
+            });
+        }
+
+        function animate(currentTime) {
+            requestAnimationFrame(animate);
+
+            const elapsed = currentTime - lastFrameTime;
+            if (elapsed < frameInterval) return;
+            lastFrameTime = currentTime - (elapsed % frameInterval);
+
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            drawGrid();
+            drawParticles();
+            drawSpectrumBars();
+            drawWaveform();
+
+            time++;
+        }
+
+        window.addEventListener('resize', () => {
+            isMobile = window.innerWidth < 768;
+            resize();
+        });
+
+        resize();
+        requestAnimationFrame(animate);
+
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        const cursorGhost = document.getElementById('cursor-ghost');
+        let mouseX = 0, mouseY = 0;
+        let ghostX = 0, ghostY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        function updateGhost() {
+            ghostX = lerp(ghostX, mouseX, 0.1);
+            ghostY = lerp(ghostY, mouseY, 0.1);
+            cursorGhost.style.left = ghostX + 'px';
+            cursorGhost.style.top = ghostY + 'px';
+            requestAnimationFrame(updateGhost);
+        }
+        updateGhost();
+
+        document.addEventListener('mouseenter', () => {
+            cursor.style.opacity = '1';
+            cursorGhost.style.opacity = '0.3';
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = '0';
+            cursorGhost.style.opacity = '0';
+        });
+
+        // Hide custom cursor on touch devices
+        if ('ontouchstart' in window) {
+            cursor.style.display = 'none';
+            cursorGhost.style.display = 'none';
+        }
+
+        // Section Dot Navigation
+        const sections = document.querySelectorAll('section');
+        const navDots = document.querySelectorAll('.section-dot');
+
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    navDots.forEach(dot => {
+                        dot.classList.remove('active');
+                        if (dot.dataset.section === sectionId) {
+                            dot.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        sections.forEach(section => sectionObserver.observe(section));
+
+        navDots.forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(dot.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Scroll Reveal Animation
+        const revealElements = document.querySelectorAll('.reveal, .section-label, .section-title');
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Copy Contract Address
+        const copyBtn = document.getElementById('copy-btn');
+        const contractAddress = document.getElementById('contract-address');
+
+        const mockAddress = 'VIRTUALDJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1234';
+        contractAddress.textContent = mockAddress;
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(mockAddress);
+                copyBtn.classList.add('copied');
+                copyBtn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    `;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
+        // Hero word animation timing fix
+        const words = document.querySelectorAll('.hero-title .word');
+        words.forEach((word, index) => {
+            word.style.animationDelay = (0.6 + index * 0.15) + 's';
+        });
+    </script>
+</body>
+</html>
