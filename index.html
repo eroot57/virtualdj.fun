@@ -1190,6 +1190,238 @@
             color: rgba(255, 200, 0, 0.6);
         }
 
+        /* SUGGEST SONG SECTION */
+        #suggest {
+            background: linear-gradient(180deg, transparent 0%, rgba(170, 0, 255, 0.03) 50%, transparent 100%);
+        }
+
+        .suggest-form {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .suggest-form {
+                padding: 2rem;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group:last-of-type {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--cyan);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.4rem;
+            color: var(--white);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.4rem;
+        }
+
+        .form-error {
+            font-size: 0.75rem;
+            color: #ff4444;
+            margin-top: 0.4rem;
+            display: none;
+        }
+
+        .form-error.visible {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 560px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--cyan);
+            color: var(--bg-dark);
+            border: 2px solid var(--cyan);
+            border-radius: 0.4rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 48px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .form-success {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .form-success.visible {
+            display: block;
+        }
+
+        .form-success h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00ff88;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-success p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .captcha-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            min-height: 65px;
+        }
+
+        /* SUGGESTIONS LIST */
+        .suggestions-list {
+            margin-top: 2rem;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.4rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .suggestion-item:hover {
+            border-color: var(--cyan);
+            transform: translateX(4px);
+        }
+
+        .suggestion-thumb {
+            width: 60px;
+            height: 45px;
+            border-radius: 0.3rem;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .suggestion-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .suggestion-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .suggestion-song {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-artist {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .suggestion-status {
+            font-size: 0.65rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.2rem;
+            flex-shrink: 0;
+        }
+
+        .suggestion-status.pending {
+            color: #ffaa00;
+            border: 1px solid rgba(255, 170, 0, 0.3);
+        }
+
+        .suggestion-status.approved {
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .empty-suggestions {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+        }
+
         /* Responsive utilities */
         @media (max-width: 767px) {
             .section-dot-nav { display: none; }
@@ -1512,6 +1744,52 @@
             </div>
         </section>
 
+        <!-- SUGGEST SONG SECTION -->
+        <section id="suggest">
+            <div class="container">
+                <div class="section-label reveal">// SUGGEST A SONG</div>
+                <h2 class="section-title reveal">Add To The Playlist</h2>
+
+                <div class="suggest-form reveal" id="suggest-form-container">
+                    <form id="suggest-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="artist">Artist</label>
+                                <input type="text" id="artist" name="artist" class="form-input" placeholder="e.g. Daft Punk" required>
+                                <div class="form-error" id="artist-error">Please enter an artist name</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="song">Song Title</label>
+                                <input type="text" id="song" name="song" class="form-input" placeholder="e.g. Around The World" required>
+                                <div class="form-error" id="song-error">Please enter a song title</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="youtube">YouTube Link</label>
+                            <input type="url" id="youtube" name="youtube" class="form-input" placeholder="https://www.youtube.com/watch?v=..." required>
+                            <div class="form-hint">Paste a valid YouTube video URL</div>
+                            <div class="form-error" id="youtube-error">Please enter a valid YouTube link</div>
+                        </div>
+                        <div class="captcha-container">
+                            <div class="cf-turnstile" data-sitekey="0x4AAAAAABp4qE2v2d5M-YGA" data-theme="dark"></div>
+                        </div>
+                        <button type="submit" class="submit-btn" id="submit-btn">SUBMIT SUGGESTION</button>
+                    </form>
+                    <div class="form-success" id="form-success">
+                        <h3>TRACK SUBMITTED!</h3>
+                        <p>Your suggestion has been received. DJ will review it.</p>
+                    </div>
+                </div>
+
+                <div class="suggestions-list reveal" id="suggestions-list">
+                    <h3 class="section-title" style="font-size: 1.2rem; margin-bottom: 1rem;">Recent Suggestions</h3>
+                    <div id="suggestions-container">
+                        <div class="empty-suggestions">Loading suggestions...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- COMMUNITY SECTION -->
         <section id="community">
             <div class="section-label reveal">// COMMUNITY</div>
@@ -1547,6 +1825,7 @@
         </section>
     </main>
 
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     <script>
         (function() {
             'use strict';
@@ -1858,6 +2137,156 @@
                     this.classList.remove('touch-active');
                 }, { passive: true });
             });
+
+            // Song Suggestion Form
+            const suggestForm = document.getElementById('suggest-form');
+            const formSuccess = document.getElementById('form-success');
+            const submitBtn = document.getElementById('submit-btn');
+            const suggestionsContainer = document.getElementById('suggestions-container');
+
+            if (suggestForm) {
+                function validateYouTube(url) {
+                    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}/;
+                    return pattern.test(url);
+                }
+
+                function extractYouTubeId(url) {
+                    const match = url.match(/(?:v=|embed\/|v\/|shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                    return match ? match[1] : null;
+                }
+
+                function showError(id, message) {
+                    const errorEl = document.getElementById(id);
+                    if (errorEl) {
+                        errorEl.textContent = message;
+                        errorEl.classList.add('visible');
+                    }
+                }
+
+                function hideErrors() {
+                    document.querySelectorAll('.form-error').forEach(function(el) {
+                        el.classList.remove('visible');
+                    });
+                }
+
+                suggestForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    hideErrors();
+
+                    const artist = document.getElementById('artist').value.trim();
+                    const song = document.getElementById('song').value.trim();
+                    const youtube = document.getElementById('youtube').value.trim();
+                    let valid = true;
+
+                    if (!artist) {
+                        showError('artist-error', 'Please enter an artist name');
+                        valid = false;
+                    }
+                    if (!song) {
+                        showError('song-error', 'Please enter a song title');
+                        valid = false;
+                    }
+                    if (!youtube || !validateYouTube(youtube)) {
+                        showError('youtube-error', 'Please enter a valid YouTube link');
+                        valid = false;
+                    }
+
+                    const turnstileResponse = document.querySelector('[name=cf-turnstile-response]');
+                    if (!turnstileResponse || !turnstileResponse.value) {
+                        alert('Please complete the captcha verification');
+                        valid = false;
+                    }
+
+                    if (!valid) return;
+
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'SUBMITTING...';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('artist', artist);
+                        formData.append('song', song);
+                        formData.append('youtube', youtube);
+                        formData.append('cf-turnstile-response', turnstileResponse.value);
+
+                        const response = await fetch('/api/suggest', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            suggestForm.style.display = 'none';
+                            formSuccess.classList.add('visible');
+                            loadSuggestions();
+                        } else {
+                            alert(data.error || 'Submission failed. Please try again.');
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'SUBMIT SUGGESTION';
+                            if (window.turnstile) {
+                                window.turnstile.reset();
+                            }
+                        }
+                    } catch (err) {
+                        alert('Network error. Please try again.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'SUBMIT SUGGESTION';
+                        if (window.turnstile) {
+                            window.turnstile.reset();
+                        }
+                    }
+                });
+            }
+
+            // Load approved suggestions
+            async function loadSuggestions() {
+                if (!suggestionsContainer) return;
+                try {
+                    const response = await fetch('/api/suggestions');
+                    const data = await response.json();
+                    const suggestions = data.suggestions || [];
+
+                    if (suggestions.length === 0) {
+                        suggestionsContainer.innerHTML = '<div class="empty-suggestions">No suggestions yet. Be the first!</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    suggestions.slice(0, 20).forEach(function(s) {
+                        const ytId = extractYouTubeId(s.youtube);
+                        const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/default.jpg` : '';
+                        html += '<div class="suggestion-item">';
+                        if (thumb) {
+                            html += '<div class="suggestion-thumb"><img src="' + thumb + '" alt="" loading="lazy"></div>';
+                        }
+                        html += '<div class="suggestion-info">';
+                        html += '<div class="suggestion-song">' + escapeHtml(s.song) + '</div>';
+                        html += '<div class="suggestion-artist">' + escapeHtml(s.artist) + '</div>';
+                        html += '</div>';
+                        html += '<span class="suggestion-status ' + s.status + '">' + s.status + '</span>';
+                        html += '</div>';
+                    });
+
+                    suggestionsContainer.innerHTML = html;
+                } catch (err) {
+                    suggestionsContainer.innerHTML = '<div class="empty-suggestions">Unable to load suggestions</div>';
+                }
+            }
+
+            function extractYouTubeId(url) {
+                if (!url) return null;
+                const match = url.match(/(?:v=|embed\/|v\/|shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                return match ? match[1] : null;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            loadSuggestions();
         })();
     </script>
 </body>
