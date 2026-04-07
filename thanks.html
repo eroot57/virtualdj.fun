@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanks! - VIRTUALDJ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --cyan: #00f5ff;
+            --magenta: #ff00aa;
+            --bg-dark: #050510;
+        }
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .container { max-width: 500px; }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--cyan);
+            margin-bottom: 1rem;
+        }
+        p {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.85rem 2rem;
+            background: var(--cyan);
+            color: var(--bg-dark);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 0.4rem;
+            transition: all 0.3s;
+        }
+        .btn:hover { box-shadow: 0 0 30px rgba(0,245,255,0.5); transform: scale(1.04); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TRACK SUBMITTED!</h1>
+        <p>Your song suggestion has been received. DJ will review it and maybe drop it on the next broadcast.</p>
+        <a href="/" class="btn">BACK TO SITE</a>
+    </div>
+</body>
+</html>
